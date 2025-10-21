@@ -1,0 +1,6 @@
+{
+  "name": "Classic OUT",
+  "word": "OUT",
+  "max_attempts": 3,
+  "player_order": "random"
+}
