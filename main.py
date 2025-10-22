@@ -10,6 +10,24 @@ for file in os.listdir(RULES_DIR):
 
 print("🛹 Bienvenue dans le Game of SKATE prototype ! 🛹\n")
 
+# --- Initialisation de la partie ---
+game = Game()
+
+# --- Initialisation des joueurs ---
+while True:
+    try:
+        nb_players = int(input("Combien de joueurs participent ? "))
+        if nb_players < 2:
+            print("⚠️ Il faut au moins 2 joueurs pour commencer la partie.")
+        else:
+            break
+    except ValueError:
+        print("Veuillez entrer un nombre valide.")
+
+for i in range(nb_players):
+    name = input(f"Nom du joueur {i+1} : ")
+    game.add_player(Player(name))
+
 # --- Choix du preset ou personnalisation ---
 print("Choix des règles :")
 preset_names = list(PRESET_RULES.keys())
@@ -67,13 +85,7 @@ else:
             print(f"Preset sauvegardé sous rulesets/{filename}.json")
 
 print(f"\nRègles choisies : {rules.name} — mot={rules.word} essais={rules.max_attempts}\n")
-game = Game(rules=rules)
-
-# --- Initialisation des joueurs ---
-nb_players = int(input("Combien de joueurs participent ? "))
-for i in range(nb_players):
-    name = input(f"Nom du joueur {i+1} : ")
-    game.add_player(Player(name))
+game.apply_rules(rules)
 
 # --- Appliquer l'ordre défini dans les règles ---
 if game.rules.player_order == "alpha":
@@ -82,10 +94,6 @@ elif game.rules.player_order == "reverse":
     game.players.sort(key=lambda p: p.name, reverse=True)
 elif game.rules.player_order == "random":
     random.shuffle(game.players)
-
-print("\nOrdre des joueurs :")
-for i, p in enumerate(game.players, start=1):
-    print(f"{i} - {p.name}")
 
 # --- Démarrage ---
 game.start()

@@ -16,6 +16,7 @@ class Game:
     def __init__(self, rules: Optional[GameRules] = None):
         # si aucune règle fournie, on crée l'instance par défaut
         self.rules = rules or GameRules()
+        self.apply_rules(self.rules)
 
         self.players = []
         self.current_attacker = None
@@ -23,8 +24,8 @@ class Game:
         self.is_active = False
 
         # Règles utilisées par la partie (valeurs centralisées dans rules)
-        self.word = self.rules.word
-        self.max_attempts = self.rules.max_attempts
+        #self.word = self.rules.word
+        #self.max_attempts = self.rules.max_attempts
 
         # Suivi des lettres des joueurs (initialisé quand on ajoute les joueurs)
         self.letter_map = {}
@@ -122,3 +123,11 @@ class Game:
             results["winner"] = self.players[0].name
 
         return results
+
+    def apply_rules(self, rules):
+        """Applique un objet GameRules au jeu (met à jour les valeurs dérivées)."""
+        self.rules = rules
+        self.word = rules.word
+        self.max_attempts = rules.max_attempts
+
+        
