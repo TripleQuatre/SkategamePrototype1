@@ -2,8 +2,7 @@ from player import Player
 
 
 class Turn:
-    def __init__(
-        self,
+    def __init__(self,
         attacker: Player,
         defenders: list[Player],
         trick: str,

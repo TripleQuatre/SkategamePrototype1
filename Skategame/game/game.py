@@ -51,3 +51,43 @@ class Game:
         self.winner = winner
         self.is_finished = True
         self.current_turn = None
+
+    def get_active_players(self):
+      return [player for player in self.players if not player.is_eliminated()]
+    
+    def resolve_current_turn(self):
+      if self.current_turn is None:
+        raise ValueError("no current turn to resolve")
+
+      if not self.current_turn.is_finished():
+        raise ValueError("current turn is not finished")
+
+      # chaque défenseur qui échoue prend une lettre
+      for defender, result in self.current_turn.result.items():
+        if result == "failure":
+            defender.score += 1
+
+      # une fois résolu, on archive le tour
+      self.finish_current_turn()
+
+    def check_winner(self):
+      active_players = self.get_active_players()
+
+      if len(active_players) == 1:
+        self.end_game(active_players[0])
+
+    def prepare_next_turn(self, attacker: Player, trick: str):
+      if self.is_finished:
+        raise ValueError("game is already finished")
+
+      active_players = self.get_active_players()
+
+      if attacker not in active_players:
+        raise ValueError("attacker must be an active player")
+
+      defenders = [player for player in active_players if player != attacker]
+
+      if len(defenders) == 0:
+        raise ValueError("not enough players to create a turn")
+
+      self.create_turn(attacker, defenders, trick)
