@@ -1,4 +1,4 @@
-class GameSettings:
+class Settings:
 
   def __init__(self, word: str, max_attempts_attack: int, max_attempts_defense: int):
     if not word:
