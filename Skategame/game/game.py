@@ -70,7 +70,8 @@ class Game:
 
       if len(active_players) == 1:
         self.end_game(active_players[0])
-
+        return active_players[0]
+      
     def get_next_attacker(self):
       active_players = self.get_active_players()
 
@@ -103,14 +104,15 @@ class Game:
       self.create_turn(attacker, defenders, trick)
 
     def advance_game(self):
+      next_attacker = self.get_next_attacker()
+      next_trick = self.current_turn.trick
       self.resolve_current_turn()
 
       winner = self.check_winner()
       if winner is not None:
         return winner
 
-      next_attacker = self.get_next_attacker()
-      self.prepare_next_turn(next_attacker)
+      self.prepare_next_turn(next_attacker, next_trick)
 
       return None
 
