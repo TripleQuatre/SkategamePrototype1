@@ -5,6 +5,25 @@ from turn import Turn
 
 class Game:
     def __init__(self, players: list[Player], settings: Settings):
+        if not isinstance(players, list):
+            raise ValueError("players must be a list")
+
+        if len(players) < 2:
+            raise ValueError("a game requires at least two players")
+
+        if len(set(players)) != len(players):
+            raise ValueError("players must be unique")
+
+        for player in players:
+            if not isinstance(player, Player):
+                raise ValueError("all players must be Player instances")
+
+            if player.is_eliminated():
+                raise ValueError("players cannot start a game already eliminated")
+
+        if not isinstance(settings, Settings):
+            raise ValueError("settings must be a Settings instance")
+
         self.players = players
         self.settings = settings
         self.current_turn = None
@@ -20,6 +39,41 @@ class Game:
         if self.is_finished:
             raise ValueError("game is already finished")
 
+        if first_attacker not in self.players:
+            raise ValueError("first attacker must belong to the game")
+
+        if first_attacker.is_eliminated():
+            raise ValueError("first attacker must be active")
+
+        if not isinstance(first_defenders, list):
+            raise ValueError("first defenders must be a list")
+
+        if len(first_defenders) == 0:
+            raise ValueError("a turn requires at least one defender")
+
+        if len(set(first_defenders)) != len(first_defenders):
+            raise ValueError("defenders must be unique")
+
+        for defender in first_defenders:
+            if defender not in self.players:
+                raise ValueError("all defenders must belong to the game")
+
+            if defender.is_eliminated():
+                raise ValueError("all defenders must be active")
+
+            if defender == first_attacker:
+                raise ValueError("attacker cannot also be a defender")
+
+        active_players = self.get_active_players()
+        expected_defenders = [player for player in active_players if player != first_attacker]
+
+        if len(first_defenders) != len(expected_defenders):
+            raise ValueError("defenders must include all active players except the attacker")
+
+        for defender in expected_defenders:
+            if defender not in first_defenders:
+                raise ValueError("defenders must include all active players except the attacker")
+
         self.is_started = True
         self.create_turn(first_attacker, first_defenders, trick)
 
@@ -32,6 +86,41 @@ class Game:
 
         if self.current_turn is not None:
             raise ValueError("a turn is already in progress")
+
+        if attacker not in self.players:
+            raise ValueError("attacker must belong to the game")
+
+        if attacker.is_eliminated():
+            raise ValueError("attacker must be active")
+
+        if not isinstance(defenders, list):
+            raise ValueError("defenders must be a list")
+
+        if len(defenders) == 0:
+            raise ValueError("a turn requires at least one defender")
+
+        if len(set(defenders)) != len(defenders):
+            raise ValueError("defenders must be unique")
+
+        for defender in defenders:
+            if defender not in self.players:
+                raise ValueError("all defenders must belong to the game")
+
+            if defender.is_eliminated():
+                raise ValueError("all defenders must be active")
+
+            if defender == attacker:
+                raise ValueError("attacker cannot also be a defender")
+
+        active_players = self.get_active_players()
+        expected_defenders = [player for player in active_players if player != attacker]
+
+        if len(defenders) != len(expected_defenders):
+            raise ValueError("defenders must include all active players except the attacker")
+
+        for defender in expected_defenders:
+            if defender not in defenders:
+                raise ValueError("defenders must include all active players except the attacker")
 
         self.current_turn = Turn(
             attacker,
