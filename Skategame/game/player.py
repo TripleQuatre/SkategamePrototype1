@@ -6,6 +6,12 @@ class Player:
     self.status = "active"
     self.score = 0
 
+  def receive_penalty(self):
+        if self.is_eliminated():
+            raise ValueError("eliminated player cannot receive a penalty")
+
+        self.score += 1
+
   def eliminate(self):
     self.status = "eliminated"
   
@@ -13,4 +19,7 @@ class Player:
     return self.status == "eliminated"
   
   def __repr__(self):
-    return f"Player(id={self.id}, name={self.name}, status={self.status}, score={self.score})"
+        return (
+            f"Player(id={self.id}, name={self.name}, "
+            f"status={self.status}, score={self.score})"
+        )

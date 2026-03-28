@@ -65,7 +65,7 @@ class Game:
       # chaque défenseur qui échoue prend une lettre
       for defender, result in self.current_turn.result.items():
         if result == "failure":
-            defender.score += 1
+            defender.receive_penalty()
 
       # une fois résolu, on archive le tour
       self.finish_current_turn()
@@ -85,7 +85,13 @@ class Game:
       if attacker not in active_players:
         raise ValueError("attacker must be an active player")
 
-      defenders = [player for player in active_players if player != attacker]
+      #defenders = []
+
+        #for player in active_players:
+          #if player != attacker:
+            #defenders.append(player)
+
+      defenders = [player for player in active_players if player != attacker]   
 
       if len(defenders) == 0:
         raise ValueError("not enough players to create a turn")
