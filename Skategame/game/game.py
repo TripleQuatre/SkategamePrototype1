@@ -143,7 +143,7 @@ class Game:
 
         for defender, result in finished_turn.result.items():
             if result == "failure":
-                defender.receive_penalty()
+                defender.receive_letters()
 
                 if self.settings.should_eliminate(defender.score):
                     defender.eliminate()

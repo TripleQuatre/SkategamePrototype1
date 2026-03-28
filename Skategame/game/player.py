@@ -6,7 +6,7 @@ class Player:
     self.status = "active"
     self.score = 0
 
-  def receive_penalty(self):
+  def receive_letters(self):
         if self.is_eliminated():
             raise ValueError("eliminated player cannot receive a penalty")
 
