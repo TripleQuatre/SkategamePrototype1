@@ -141,12 +141,13 @@ class Game:
 
         finished_turn = self.current_turn
 
-        for defender, result in finished_turn.result.items():
-            if result == "failure":
-                defender.receive_letters()
+        if finished_turn.attack_result == "success":
+            for defender, result in finished_turn.defense_results.items():
+                if result == "failure":
+                    defender.receive_letters()
 
-                if self.settings.should_eliminate(defender.score):
-                    defender.eliminate()
+                    if self.settings.should_eliminate(defender.score):
+                        defender.eliminate()
 
         self.check_winner()
 

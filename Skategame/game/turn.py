@@ -21,8 +21,22 @@ class Turn:
             defender: None for defender in defenders
         }
 
+        self.attack_result = None
         self.turn_state = "defense_pending"
-        self.result = None
+
+    def set_attack_success(self):
+        if self.turn_state != "attack_pending":
+            raise ValueError("attack is not pending")
+
+        self.attack_result = "success"
+        self.turn_state = "defense_pending"
+
+    def set_attack_failure(self):
+        if self.turn_state != "attack_pending":
+            raise ValueError("attack is not pending")
+
+        self.attack_result = "failure"
+        self.turn_state = "finished"
 
     def use_defense_attempt(self, defender: Player):
         if self.turn_state != "defense_pending":
@@ -71,7 +85,6 @@ class Turn:
     def update_turn_state(self):
         if self.all_defenders_answered():
             self.turn_state = "finished"
-            self.result = self.defense_results.copy()
 
     def is_finished(self):
         return self.turn_state == "finished"

@@ -9,6 +9,16 @@ def ask_non_empty_text(prompt: str) -> str:
         print("This field cannot be empty.")
 
 
+def ask_yes_no(prompt: str) -> str:
+    while True:
+        answer = input(prompt).strip().lower()
+
+        if answer in ("y", "n"):
+            return answer
+
+        print("Please answer with y or n.")
+
+
 def ask_defense_attempts() -> int:
     while True:
         raw_value = input("Defense attempts (1-3): ").strip()
@@ -54,29 +64,41 @@ def run():
 
     controller.create_game([p1, p2], word, attempts)
 
-    attacker = p1
-    first_trick = ask_non_empty_text(f"{attacker} sets the first trick: ")
-    controller.start_game(attacker, first_trick)
+    first_attacker = p1
+    first_trick = ask_non_empty_text(f"{first_attacker} sets the first trick: ")
+    controller.start_game(first_attacker, first_trick)
 
     while not controller.is_finished():
         turn = controller.get_current_turn()
-        attacker_name = turn.attacker.name
+        attacker = turn.attacker
         defender = turn.defenders[0]
 
-        print(f"\n{attacker_name} vs {defender.name}")
+        print(f"\n{attacker.name} vs {defender.name}")
         print(f"Trick: {turn.trick}")
 
-        while turn.defense_results[defender] is None:
+        if turn.turn_state == "attack_pending":
+            attack_answer = ask_yes_no(f"Did {attacker.name} land the trick? (y/n): ")
+            controller.resolve_attack(attack_answer == "y")
+
+            if turn.turn_state == "finished":
+                previous_attacker = turn.attacker
+
+                controller.finish_turn()
+                display_scoreboard(controller)
+
+                if controller.is_finished():
+                    break
+
+                next_attacker = controller.game.get_next_attacker(previous_attacker)
+                next_trick = ask_non_empty_text(f"{next_attacker.name} sets the next trick: ")
+                controller.prepare_next_turn(next_trick)
+                continue
+
+        while turn.turn_state == "defense_pending" and turn.defense_results[defender] is None:
             attempts_left = turn.defense_attempts_left[defender]
             print(f"{defender.name} has {attempts_left} attempt(s) left.")
 
-            answer = input(
-                f"Attempt successful? (y/n): "
-            ).strip().lower()
-
-            if answer not in ("y", "n"):
-                print("Please answer with y or n.")
-                continue
+            answer = ask_yes_no("Attempt successful? (y/n): ")
 
             if answer == "y":
                 controller.resolve_defense(defender.name, "success")
@@ -88,20 +110,16 @@ def run():
                 else:
                     print("Attempt failed. Try again.")
 
-        if controller.is_finished():
-            break
-
         previous_attacker = turn.attacker
 
         controller.finish_turn()
         display_scoreboard(controller)
 
         if controller.is_finished():
-          break
+            break
 
         next_attacker = controller.game.get_next_attacker(previous_attacker)
         next_trick = ask_non_empty_text(f"{next_attacker.name} sets the next trick: ")
-
         controller.prepare_next_turn(next_trick)
 
     print(f"\nWinner is: {controller.get_winner().name}")

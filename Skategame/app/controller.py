@@ -24,6 +24,17 @@ class GameController:
 
         self.game.start(attacker, defenders, trick)
 
+    def resolve_attack(self, success: bool):
+        if self.game.current_turn is None:
+            raise ValueError("no current turn")
+
+        turn = self.game.current_turn
+
+        if success:
+            turn.set_attack_success()
+        else:
+            turn.set_attack_failure()
+
     def resolve_defense(self, defender_name, result):
         defender = self.players[defender_name]
 
