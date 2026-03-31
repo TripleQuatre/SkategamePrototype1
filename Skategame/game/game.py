@@ -1,6 +1,6 @@
-from player import Player
-from settings import Settings
-from turn import Turn
+from .player import Player
+from .settings import Settings
+from .turn import Turn
 
 
 class Game:
@@ -163,7 +163,13 @@ class Game:
         return None
 
     def get_next_attacker(self, current_attacker: Player):
+        if current_attacker not in self.players:
+            raise ValueError("current attacker must belong to the game")
+        
         active_players = self.get_active_players()
+
+        if current_attacker not in active_players:
+            raise ValueError("current attacker must be an active player")
 
         current_index = active_players.index(current_attacker)
         next_index = (current_index + 1) % len(active_players)

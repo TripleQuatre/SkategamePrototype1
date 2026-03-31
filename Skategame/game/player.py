@@ -8,7 +8,7 @@ class Player:
 
   def receive_letters(self):
         if self.is_eliminated():
-            raise ValueError("eliminated player cannot receive a penalty")
+            raise ValueError("eliminated player cannot receive a take a letter")
 
         self.score += 1
 
