@@ -8,12 +8,15 @@ class SkateGameUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("SkateGame Prototype")
-        self.root.geometry("420x360")
+        self.root.geometry("520x420")
 
         self.controller = GameController()
 
         self.player_names = []
         self.word = ""
+
+        self.waiting_for_next_trick = False
+        self.next_attacker_name = None
 
         self.setup_screen = None
         self.game_screen = None
@@ -91,40 +94,48 @@ class SkateGameUI:
         self.player_names = [player1, player2]
         self.word = word
 
-        first_attacker = self.player_names[0]
-
-        first_trick = self.ask_text_dialog(f"{first_attacker} sets the first trick:")
-        if first_trick is None:
-            return
-
-        try:
-            self.controller.start_game(first_attacker, first_trick)
-        except ValueError as error:
-            messagebox.showerror("Start error", str(error))
-            return
-
         self.build_game_screen()
+
+        self.waiting_for_next_trick = True
+        self.next_attacker_name = self.player_names[0]
+
         self.refresh_game_screen()
 
     def build_game_screen(self):
         self.clear_root()
 
+        self.trick_input_frame = tk.Frame(self.game_screen)
+
+        self.trick_prompt_label = tk.Label(
+            self.trick_input_frame,
+            font=("Arial", 12, "bold")
+        )
+        self.trick_prompt_label.pack(pady=(0, 8))
+
+        self.trick_entry = tk.Entry(self.trick_input_frame, width=30)
+        self.trick_entry.pack(pady=(0, 8))
+
+        self.confirm_trick_button = tk.Button(
+            self.trick_input_frame,
+            text="Confirm trick",
+            command=self.confirm_next_trick
+        )
+        self.confirm_trick_button.pack()
+
         self.game_screen = tk.Frame(self.root, padx=20, pady=20)
         self.game_screen.pack(fill="both", expand=True)
 
-        # Header players
         self.players_label = tk.Label(
             self.game_screen,
             font=("Arial", 18, "bold")
         )
         self.players_label.pack(pady=(0, 15))
 
-        # Score word area
         self.score_frame = tk.Frame(self.game_screen)
         self.score_frame.pack(pady=(0, 25))
 
         self.left_word_frame = tk.Frame(self.score_frame)
-        self.left_word_frame.pack(side="left", padx=(0, 30))
+        self.left_word_frame.pack(side="left", padx=(0, 25))
 
         self.separator_label = tk.Label(
             self.score_frame,
@@ -134,9 +145,8 @@ class SkateGameUI:
         self.separator_label.pack(side="left")
 
         self.right_word_frame = tk.Frame(self.score_frame)
-        self.right_word_frame.pack(side="left", padx=(30, 0))
+        self.right_word_frame.pack(side="left", padx=(25, 0))
 
-        # Turn info
         self.turn_label = tk.Label(
             self.game_screen,
             font=("Arial", 14, "bold")
@@ -149,31 +159,34 @@ class SkateGameUI:
         )
         self.trick_label.pack(pady=(0, 10))
 
+        self.phase_label = tk.Label(
+            self.game_screen,
+            font=("Arial", 12)
+        )
+        self.phase_label.pack(pady=(0, 8))
+
         self.attempts_label = tk.Label(
             self.game_screen,
             font=("Arial", 12)
         )
         self.attempts_label.pack(pady=(0, 20))
 
-        # Buttons
         buttons_frame = tk.Frame(self.game_screen)
         buttons_frame.pack(pady=(0, 20))
 
-        self.success_button = tk.Button(
+        self.primary_button = tk.Button(
             buttons_frame,
-            text="Success",
             width=14,
-            command=self.handle_success
+            command=self.handle_primary_action
         )
-        self.success_button.pack(side="left", padx=10)
+        self.primary_button.pack(side="left", padx=10)
 
-        self.fail_button = tk.Button(
+        self.secondary_button = tk.Button(
             buttons_frame,
-            text="Fail attempt",
             width=14,
-            command=self.handle_fail_attempt
+            command=self.handle_secondary_action
         )
-        self.fail_button.pack(side="left", padx=10)
+        self.secondary_button.pack(side="left", padx=10)
 
     def refresh_game_screen(self):
         game = self.controller.game
@@ -182,9 +195,34 @@ class SkateGameUI:
             self.show_winner_screen()
             return
 
+        if self.waiting_for_next_trick:
+            self.players_label.config(
+                text=f"{self.player_names[0].upper()} - {self.player_names[1].upper()}"
+            )
+
+            self.render_word_progress()
+
+            self.turn_label.config(text="")
+            self.trick_label.config(text="")
+            self.phase_label.config(text="")
+            self.attempts_label.config(text="")
+
+            self.primary_button.config(state="disabled")
+            self.secondary_button.config(state="disabled")
+
+            self.trick_prompt_label.config(
+                text=f"{self.next_attacker_name} sets the next trick"
+            )
+            self.trick_input_frame.pack(pady=(0, 20))
+            self.trick_entry.focus_set()
+            return
+
         turn = self.controller.get_current_turn()
         attacker = turn.attacker
         defender = turn.defenders[0]
+
+        # cacher le champ de saisie du trick par défaut
+        self.trick_input_frame.pack_forget()
 
         self.players_label.config(
             text=f"{self.player_names[0].upper()} - {self.player_names[1].upper()}"
@@ -200,10 +238,24 @@ class SkateGameUI:
             text=f"Trick: {turn.trick}"
         )
 
-        attempts_left = turn.defense_attempts_left[defender]
-        self.attempts_label.config(
-            text=f"{defender.name} has {attempts_left} defense attempt(s) left"
-        )
+        if turn.turn_state == "attack_pending":
+            self.phase_label.config(
+                text=f"Attack phase: did {attacker.name} land the trick?"
+            )
+            self.attempts_label.config(text="")
+            self.primary_button.config(text="Landed", state="normal")
+            self.secondary_button.config(text="Missed", state="normal")
+
+        elif turn.turn_state == "defense_pending":
+            attempts_left = turn.defense_attempts_left[defender]
+            self.phase_label.config(
+                text=f"Defense phase: {defender.name} tries to reproduce the trick"
+            )
+            self.attempts_label.config(
+                text=f"{defender.name} has {attempts_left} defense attempt(s) left"
+            )
+            self.primary_button.config(text="Success", state="normal")
+            self.secondary_button.config(text="Fail attempt", state="normal")
 
     def render_word_progress(self):
         for widget in self.left_word_frame.winfo_children():
@@ -217,6 +269,28 @@ class SkateGameUI:
 
         self.render_word_for_player(self.left_word_frame, player1.score)
         self.render_word_for_player(self.right_word_frame, player2.score)
+
+    def confirm_next_trick(self):
+        trick = self.trick_entry.get().strip()
+
+        if not trick:
+            messagebox.showerror("Invalid input", "Trick cannot be empty.")
+            return
+
+        try:
+            if not self.controller.game.is_started:
+                self.controller.start_game(self.next_attacker_name, trick)
+            else:
+                self.controller.prepare_next_turn(trick)
+        except ValueError as error:
+            messagebox.showerror("Trick error", str(error))
+            return
+
+        self.trick_entry.delete(0, tk.END)
+        self.waiting_for_next_trick = False
+        self.next_attacker_name = None
+
+        self.refresh_game_screen()
 
     def render_word_for_player(self, parent_frame, score: int):
         for index, letter in enumerate(self.word):
@@ -237,36 +311,44 @@ class SkateGameUI:
 
             label.pack(side="left", padx=2)
 
-    def handle_success(self):
+    def handle_primary_action(self):
         turn = self.controller.get_current_turn()
-        defender = turn.defenders[0]
 
         try:
-            self.controller.resolve_defense(defender.name, "success")
-            self.end_turn_and_continue()
+            if turn.turn_state == "attack_pending":
+                self.controller.resolve_attack(True)
+                self.refresh_game_screen()
+
+            elif turn.turn_state == "defense_pending":
+                defender = turn.defenders[0]
+                self.controller.resolve_defense(defender.name, "success")
+                self.end_turn_and_continue()
+
         except ValueError as error:
             messagebox.showerror("Turn error", str(error))
 
-    def handle_fail_attempt(self):
+    def handle_secondary_action(self):
         turn = self.controller.get_current_turn()
-        defender = turn.defenders[0]
 
         try:
-            turn.use_defense_attempt(defender)
-
-            if turn.defense_attempts_left[defender] == 0:
-                self.controller.resolve_defense(defender.name, "failure")
+            if turn.turn_state == "attack_pending":
+                self.controller.resolve_attack(False)
                 self.end_turn_and_continue()
-            else:
-                self.refresh_game_screen()
+
+            elif turn.turn_state == "defense_pending":
+                defender = turn.defenders[0]
+                turn.use_defense_attempt(defender)
+
+                if turn.defense_attempts_left[defender] == 0:
+                    self.controller.resolve_defense(defender.name, "failure")
+                    self.end_turn_and_continue()
+                else:
+                    self.refresh_game_screen()
 
         except ValueError as error:
             messagebox.showerror("Turn error", str(error))
 
     def end_turn_and_continue(self):
-        turn = self.controller.get_current_turn()
-        previous_attacker = turn.attacker
-
         try:
             self.controller.finish_turn()
         except ValueError as error:
@@ -277,71 +359,30 @@ class SkateGameUI:
             self.refresh_game_screen()
             return
 
-        next_attacker = self.controller.game.get_next_attacker(previous_attacker)
-        next_trick = self.ask_text_dialog(f"{next_attacker.name} sets the next trick:")
+        last_attacker = self.controller.game.turn_history[-1].attacker
+        next_attacker = self.controller.game.get_next_attacker(last_attacker)
 
-        if next_trick is None:
-            return
-
-        try:
-            self.controller.prepare_next_turn(next_trick)
-        except ValueError as error:
-            messagebox.showerror("Next turn error", str(error))
-            return
+        self.waiting_for_next_trick = True
+        self.next_attacker_name = next_attacker.name
 
         self.refresh_game_screen()
 
     def show_winner_screen(self):
         winner = self.controller.get_winner()
 
-        self.turn_label.config(text=f"Winner: {winner.name}")
-        self.trick_label.config(text="")
-        self.attempts_label.config(text="")
-
-        self.success_button.config(state="disabled")
-        self.fail_button.config(state="disabled")
-
         self.render_word_progress()
 
-    def ask_text_dialog(self, prompt: str):
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Input")
-        dialog.geometry("320x140")
-        dialog.transient(self.root)
-        dialog.grab_set()
+        self.turn_label.config(text=f"Winner: {winner.name}")
+        self.trick_label.config(text="")
+        self.phase_label.config(text="")
+        self.attempts_label.config(text="")
 
-        result = {"value": None}
-
-        tk.Label(dialog, text=prompt, wraplength=280).pack(pady=(15, 10))
-
-        entry = tk.Entry(dialog)
-        entry.pack(fill="x", padx=20)
-        entry.focus_set()
-
-        def validate():
-            value = entry.get().strip()
-            if not value:
-                messagebox.showerror("Invalid input", "This field cannot be empty.", parent=dialog)
-                return
-            result["value"] = value
-            dialog.destroy()
-
-        def cancel():
-            dialog.destroy()
-
-        buttons_frame = tk.Frame(dialog)
-        buttons_frame.pack(pady=15)
-
-        tk.Button(buttons_frame, text="OK", width=10, command=validate).pack(side="left", padx=5)
-        tk.Button(buttons_frame, text="Cancel", width=10, command=cancel).pack(side="left", padx=5)
-
-        dialog.wait_window()
-        return result["value"]
+        self.primary_button.config(state="disabled")
+        self.secondary_button.config(state="disabled")
 
     def clear_root(self):
         for widget in self.root.winfo_children():
             widget.destroy()
-
 
 def main():
     root = tk.Tk()

@@ -22,7 +22,7 @@ class Turn:
         }
 
         self.attack_result = None
-        self.turn_state = "defense_pending"
+        self.turn_state = "attack_pending"
 
     def set_attack_success(self):
         if self.turn_state != "attack_pending":
