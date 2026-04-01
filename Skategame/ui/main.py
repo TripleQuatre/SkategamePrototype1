@@ -8,7 +8,7 @@ class SkateGameUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("SkateGame Prototype")
-        self.root.geometry("520x420")
+        self.root.geometry("520x460")
 
         self.controller = GameController()
 
