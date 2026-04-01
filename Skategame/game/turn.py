@@ -11,7 +11,6 @@ class Turn:
         self.attacker = attacker
         self.defenders = defenders
         self.trick = trick
-        self.max_defense_attempts = max_defense_attempts
 
         self.defense_attempts_left = {
             defender: max_defense_attempts for defender in defenders

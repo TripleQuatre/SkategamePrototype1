@@ -158,8 +158,9 @@ class Game:
         active_players = self.get_active_players()
 
         if len(active_players) == 1:
-            self.end_game(active_players[0])
-            return active_players[0]
+            winner = active_players[0]
+            self.end_game(winner)
+            return winner
 
         return None
 

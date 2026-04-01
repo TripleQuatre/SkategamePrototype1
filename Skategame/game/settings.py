@@ -17,8 +17,5 @@ class Settings:
     self.max_attempts_attack = max_attempts_attack 
     self.max_attempts_defense = max_attempts_defense
 
-  def get_penalty_display(self, score: int) -> str:
-      return self.word[:score]
-
   def should_eliminate(self, score: int) -> bool:
       return score >= len(self.word)

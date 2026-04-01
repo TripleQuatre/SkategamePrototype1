@@ -9,6 +9,7 @@ class GameController:
         self.players = {}
 
     def create_game(self, player_names, word, max_defense_attempts):
+        self.players = {}
         players = []
         for i, name in enumerate(player_names):
             player = Player(i, name)

@@ -189,26 +189,24 @@ class SkateGameUI:
         self.secondary_button.pack(side="left", padx=10)
 
     def refresh_game_screen(self):
-        game = self.controller.game
-
-        if game.is_finished:
+        if self.controller.is_finished():
             self.show_winner_screen()
             return
 
+        self.players_label.config(
+            text=f"{self.player_names[0].upper()} - {self.player_names[1].upper()}"
+        )
+
+        self.render_word_progress()
+
         if self.waiting_for_next_trick:
-            self.players_label.config(
-                text=f"{self.player_names[0].upper()} - {self.player_names[1].upper()}"
-            )
-
-            self.render_word_progress()
-
             self.turn_label.config(text="")
             self.trick_label.config(text="")
             self.phase_label.config(text="")
             self.attempts_label.config(text="")
 
-            self.primary_button.config(state="disabled")
-            self.secondary_button.config(state="disabled")
+            self.primary_button.config(text="", state="disabled")
+            self.secondary_button.config(text="", state="disabled")
 
             self.trick_prompt_label.config(
                 text=f"{self.next_attacker_name} sets the next trick"
@@ -218,22 +216,29 @@ class SkateGameUI:
             return
 
         turn = self.controller.get_current_turn()
+
+        if turn is None:
+            self.turn_label.config(text="")
+            self.trick_label.config(text="")
+            self.phase_label.config(text="No active turn")
+            self.attempts_label.config(text="")
+
+            self.primary_button.config(text="", state="disabled")
+            self.secondary_button.config(text="", state="disabled")
+
+            self.trick_prompt_label.config(text="")
+            self.trick_input_frame.pack_forget()
+            return
+
         attacker = turn.attacker
         defender = turn.defenders[0]
 
-        # cacher le champ de saisie du trick par défaut
+        self.trick_prompt_label.config(text="")
         self.trick_input_frame.pack_forget()
-
-        self.players_label.config(
-            text=f"{self.player_names[0].upper()} - {self.player_names[1].upper()}"
-        )
-
-        self.render_word_progress()
 
         self.turn_label.config(
             text=f"{attacker.name} attacks / {defender.name} defends"
         )
-
         self.trick_label.config(
             text=f"Trick: {turn.trick}"
         )
@@ -248,6 +253,7 @@ class SkateGameUI:
 
         elif turn.turn_state == "defense_pending":
             attempts_left = turn.defense_attempts_left[defender]
+
             self.phase_label.config(
                 text=f"Defense phase: {defender.name} tries to reproduce the trick"
             )
@@ -255,7 +261,15 @@ class SkateGameUI:
                 text=f"{defender.name} has {attempts_left} defense attempt(s) left"
             )
             self.primary_button.config(text="Success", state="normal")
-            self.secondary_button.config(text="Fail attempt", state="normal")
+            self.secondary_button.config(text="Failure", state="normal")
+
+        else:
+            self.phase_label.config(
+                text=f"Unknown turn state: {turn.turn_state}"
+            )
+            self.attempts_label.config(text="")
+            self.primary_button.config(text="", state="disabled")
+            self.secondary_button.config(text="", state="disabled")
 
     def render_word_progress(self):
         for widget in self.left_word_frame.winfo_children():
