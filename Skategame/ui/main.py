@@ -104,6 +104,9 @@ class SkateGameUI:
     def build_game_screen(self):
         self.clear_root()
 
+        self.game_screen = tk.Frame(self.root, padx=20, pady=20)
+        self.game_screen.pack(fill="both", expand=True)
+
         self.trick_input_frame = tk.Frame(self.game_screen)
 
         self.trick_prompt_label = tk.Label(
@@ -121,9 +124,6 @@ class SkateGameUI:
             command=self.confirm_next_trick
         )
         self.confirm_trick_button.pack()
-
-        self.game_screen = tk.Frame(self.root, padx=20, pady=20)
-        self.game_screen.pack(fill="both", expand=True)
 
         self.players_label = tk.Label(
             self.game_screen,
@@ -211,6 +211,7 @@ class SkateGameUI:
             self.trick_prompt_label.config(
                 text=f"{self.next_attacker_name} sets the next trick"
             )
+            self.trick_entry.delete(0, tk.END)
             self.trick_input_frame.pack(pady=(0, 20))
             self.trick_entry.focus_set()
             return
@@ -220,7 +221,7 @@ class SkateGameUI:
         if turn is None:
             self.turn_label.config(text="")
             self.trick_label.config(text="")
-            self.phase_label.config(text="No active turn")
+            self.phase_label.config(text="")
             self.attempts_label.config(text="")
 
             self.primary_button.config(text="", state="disabled")
@@ -264,9 +265,7 @@ class SkateGameUI:
             self.secondary_button.config(text="Failure", state="normal")
 
         else:
-            self.phase_label.config(
-                text=f"Unknown turn state: {turn.turn_state}"
-            )
+            self.phase_label.config(text="Unknown turn state")
             self.attempts_label.config(text="")
             self.primary_button.config(text="", state="disabled")
             self.secondary_button.config(text="", state="disabled")
