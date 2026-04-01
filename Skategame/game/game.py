@@ -1,6 +1,7 @@
 from .player import Player
 from .settings import Settings
 from .turn import Turn
+from .history import TurnRecord
 
 
 class Game:
@@ -28,6 +29,7 @@ class Game:
         self.settings = settings
         self.current_turn = None
         self.turn_history = []
+        self.validated_tricks = set()
         self.is_started = False
         self.is_finished = False
         self.winner = None
@@ -69,6 +71,9 @@ class Game:
 
         if len(first_defenders) != len(expected_defenders):
             raise ValueError("defenders must include all active players except the attacker")
+
+        if self.is_trick_already_used(trick):
+            raise ValueError(f"trick '{trick}' has already been validated in this game")
 
         for defender in expected_defenders:
             if defender not in first_defenders:
@@ -118,6 +123,9 @@ class Game:
         if len(defenders) != len(expected_defenders):
             raise ValueError("defenders must include all active players except the attacker")
 
+        if self.is_trick_already_used(trick):
+            raise ValueError(f"trick '{trick}' has already been validated in this game")
+
         for defender in expected_defenders:
             if defender not in defenders:
                 raise ValueError("defenders must include all active players except the attacker")
@@ -141,17 +149,40 @@ class Game:
 
         finished_turn = self.current_turn
 
+        letters_received = []
+        eliminated_players = []
+
         if finished_turn.attack_result == "success":
+            self.validated_tricks.add(finished_turn.trick)
+
             for defender, result in finished_turn.defense_results.items():
                 if result == "failure":
                     defender.receive_letters()
+                    letters_received.append(defender.name)
 
                     if self.settings.should_eliminate(defender.score):
                         defender.eliminate()
+                        eliminated_players.append(defender.name)
 
         self.check_winner()
 
-        self.turn_history.append(finished_turn)
+        turn_number = len(self.turn_history) + 1
+
+        record = TurnRecord(
+            turn_number=turn_number,
+            attacker=finished_turn.attacker.name,
+            trick=finished_turn.trick,
+            attack_result=finished_turn.attack_result,
+            defense_results={
+                defender.name: result
+                for defender, result in finished_turn.defense_results.items()
+            },
+            letters_received=letters_received,
+            eliminated_players=eliminated_players,
+        )
+
+        self.turn_history.append(record)
+
         self.current_turn = None
 
     def check_winner(self):
@@ -177,6 +208,9 @@ class Game:
         next_index = (current_index + 1) % len(active_players)
 
         return active_players[next_index]
+
+    def is_trick_already_used(self, trick: str) -> bool:
+        return trick in self.validated_tricks
 
     def prepare_next_turn(self, attacker: Player, trick: str):
         if not self.is_started:
