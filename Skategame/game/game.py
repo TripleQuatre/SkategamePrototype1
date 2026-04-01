@@ -3,7 +3,6 @@ from .settings import Settings
 from .turn import Turn
 from .history import TurnRecord
 
-
 class Game:
     def __init__(self, players: list[Player], settings: Settings):
         if not isinstance(players, list):
@@ -28,7 +27,7 @@ class Game:
         self.players = players
         self.settings = settings
         self.current_turn = None
-        self.turn_history = []
+        self.turn_history: list[TurnRecord] = []
         self.validated_tricks = set()
         self.is_started = False
         self.is_finished = False

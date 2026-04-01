@@ -25,5 +25,6 @@ class TurnRecord:
             f"defense: {self.defense_results} | "
             f"letters: {self.letters_received} | "
             f"eliminated: {self.eliminated_players}"
-            
         )
+    
+    

@@ -48,9 +48,9 @@ class GameController:
         self.game.finish_current_turn()
 
     def prepare_next_turn(self, trick):
-        current_attacker = self.game.turn_history[-1].attacker
+        current_attacker_name = self.game.turn_history[-1].attacker
+        current_attacker = self.players[current_attacker_name]
         next_attacker = self.game.get_next_attacker(current_attacker)
-
         self.game.prepare_next_turn(next_attacker, trick)
 
     def is_finished(self):

@@ -1,6 +1,5 @@
 from app.controller import GameController
 
-
 def ask_non_empty_text(prompt: str) -> str:
     while True:
         value = input(prompt).strip()
@@ -123,6 +122,9 @@ def run():
         controller.prepare_next_turn(next_trick)
 
     print(f"\nWinner is: {controller.get_winner().name}")
+
+    for record in controller.game.turn_history:
+        print(record)
 
 if __name__ == "__main__":
     run()
