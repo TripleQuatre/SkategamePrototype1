@@ -157,7 +157,8 @@ class Game:
             for defender, result in finished_turn.defense_results.items():
                 if result == "failure":
                     defender.receive_letters()
-                    letters_received.append(defender.name)
+                    letter = self.settings.word[defender.score - 1]
+                    letters_received.append((defender.name, letter))
 
                     if self.settings.should_eliminate(defender.score):
                         defender.eliminate()

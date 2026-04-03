@@ -20,6 +20,11 @@ class Turn:
             defender: None for defender in defenders
         }
 
+        self.defense_attempt_history = {
+            defender: []
+            for defender in defenders
+        }
+
         self.attack_result = None
         self.turn_state = "attack_pending"
 
@@ -61,7 +66,7 @@ class Turn:
 
         if self.defense_results[defender] is not None:
             raise ValueError("this defender already has a result")
-
+        
         self.defense_results[defender] = "success"
         self.update_turn_state()
 
@@ -74,7 +79,7 @@ class Turn:
 
         if self.defense_results[defender] is not None:
             raise ValueError("this defender already has a result")
-
+        
         self.defense_results[defender] = "failure"
         self.update_turn_state()
 

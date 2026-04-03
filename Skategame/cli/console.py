@@ -7,7 +7,6 @@ def ask_non_empty_text(prompt: str) -> str:
             return value
         print("This field cannot be empty.")
 
-
 def ask_yes_no(prompt: str) -> str:
     while True:
         answer = input(prompt).strip().lower()
@@ -16,7 +15,6 @@ def ask_yes_no(prompt: str) -> str:
             return answer
 
         print("Please answer with y or n.")
-
 
 def ask_defense_attempts() -> int:
     while True:
@@ -44,7 +42,6 @@ def format_word_progress(word: str, score: int) -> str:
 
     return " ".join(revealed)
 
-
 def display_scoreboard(controller):
     word = controller.game.settings.word
 
@@ -52,6 +49,16 @@ def display_scoreboard(controller):
     for player in controller.game.players:
         progress = format_word_progress(word, player.score)
         print(f"{player.name:<10} {progress}")
+
+def ask_next_trick_until_valid(controller, next_attacker):
+    while True:
+        next_trick = ask_non_empty_text(f"{next_attacker.name} sets the next trick: ")
+
+        try:
+            controller.prepare_next_turn(next_trick)
+            return
+        except ValueError as error:
+            print(error)
 
 def run():
     controller = GameController()
@@ -89,8 +96,7 @@ def run():
                     break
 
                 next_attacker = controller.game.get_next_attacker(previous_attacker)
-                next_trick = ask_non_empty_text(f"{next_attacker.name} sets the next trick: ")
-                controller.prepare_next_turn(next_trick)
+                ask_next_trick_until_valid(controller, next_attacker)
                 continue
 
         while turn.turn_state == "defense_pending" and turn.defense_results[defender] is None:
@@ -118,8 +124,7 @@ def run():
             break
 
         next_attacker = controller.game.get_next_attacker(previous_attacker)
-        next_trick = ask_non_empty_text(f"{next_attacker.name} sets the next trick: ")
-        controller.prepare_next_turn(next_trick)
+        ask_next_trick_until_valid(controller, next_attacker)
 
     print(f"\nWinner is: {controller.get_winner().name}")
 

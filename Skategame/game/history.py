@@ -8,6 +8,7 @@ class TurnRecord:
         defense_results: dict[str, str],
         letters_received: list[str],
         eliminated_players: list[str],
+        defense_attempts: dict[str, list[str]]
     ):
         self.turn_number = turn_number
         self.attacker = attacker
@@ -16,6 +17,7 @@ class TurnRecord:
         self.defense_results = defense_results
         self.letters_received = letters_received
         self.eliminated_players = eliminated_players
+        self.defense_attempts = defense_attempts
 
     def __repr__(self):
         return (
@@ -26,5 +28,4 @@ class TurnRecord:
             f"letters: {self.letters_received} | "
             f"eliminated: {self.eliminated_players}"
         )
-    
     

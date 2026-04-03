@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 
 from app.controller import GameController
-
 
 class SkateGameUI:
     def __init__(self, root: tk.Tk):
@@ -20,6 +20,10 @@ class SkateGameUI:
 
         self.setup_screen = None
         self.game_screen = None
+
+        self.current_view = "game"
+        self.history_frame = None
+        self.arbitration_frame = None
 
         self.build_setup_screen()
 
@@ -104,10 +108,52 @@ class SkateGameUI:
     def build_game_screen(self):
         self.clear_root()
 
-        self.game_screen = tk.Frame(self.root, padx=20, pady=20)
+        self.game_screen = tk.Frame(self.root)
         self.game_screen.pack(fill="both", expand=True)
 
-        self.trick_input_frame = tk.Frame(self.game_screen)
+        self.arbitration_frame = tk.Frame(self.game_screen)
+        self.history_frame = tk.Frame(self.game_screen)
+        self.arbitration_frame.pack(fill="both", expand=True)
+
+        self.history_title = tk.Label(
+        self.history_frame,
+        text="Game history",
+        font=("Arial", 16, "bold")
+        )
+        self.history_title.pack(pady=10)
+
+        self.history_table = ttk.Treeview(
+        self.history_frame,
+        columns=("turn", "attacker", "trick", "attack", "defense", "letters", "eliminated"),
+        show="headings"
+        )
+
+        self.history_table.pack(fill="both", expand=True, padx=10, pady=10)
+
+        self.history_table.heading("turn", text="Turn")
+        self.history_table.heading("attacker", text="Attacker")
+        self.history_table.heading("trick", text="Trick")
+        self.history_table.heading("attack", text="Attack")
+        self.history_table.heading("defense", text="Defense")
+        self.history_table.heading("letters", text="Letters")
+        self.history_table.heading("eliminated", text="Eliminated")
+
+        self.history_table.column("turn", width=20, anchor="center")
+        self.history_table.column("attacker", width=70, anchor="center")
+        self.history_table.column("trick", width=100, anchor="center")
+        self.history_table.column("attack", width=20, anchor="center")
+        self.history_table.column("defense", width=60, anchor="w")
+        self.history_table.column("letters", width=20, anchor="w")
+        self.history_table.column("eliminated", width=70, anchor="center")
+
+        self.back_button = tk.Button(
+        self.history_frame,
+        text="Back to game",
+        command=self.toggle_history_view
+        )
+        self.back_button.pack(pady=20)
+
+        self.trick_input_frame = tk.Frame(self.arbitration_frame)
 
         self.trick_prompt_label = tk.Label(
             self.trick_input_frame,
@@ -126,12 +172,12 @@ class SkateGameUI:
         self.confirm_trick_button.pack()
 
         self.players_label = tk.Label(
-            self.game_screen,
+            self.arbitration_frame,
             font=("Arial", 18, "bold")
         )
         self.players_label.pack(pady=(0, 15))
 
-        self.score_frame = tk.Frame(self.game_screen)
+        self.score_frame = tk.Frame(self.arbitration_frame)
         self.score_frame.pack(pady=(0, 25))
 
         self.left_word_frame = tk.Frame(self.score_frame)
@@ -148,30 +194,30 @@ class SkateGameUI:
         self.right_word_frame.pack(side="left", padx=(25, 0))
 
         self.turn_label = tk.Label(
-            self.game_screen,
+            self.arbitration_frame,
             font=("Arial", 14, "bold")
         )
         self.turn_label.pack(pady=(0, 10))
 
         self.trick_label = tk.Label(
-            self.game_screen,
+            self.arbitration_frame,
             font=("Arial", 13)
         )
         self.trick_label.pack(pady=(0, 10))
 
         self.phase_label = tk.Label(
-            self.game_screen,
+            self.arbitration_frame,
             font=("Arial", 12)
         )
         self.phase_label.pack(pady=(0, 8))
 
         self.attempts_label = tk.Label(
-            self.game_screen,
+            self.arbitration_frame,
             font=("Arial", 12)
         )
         self.attempts_label.pack(pady=(0, 20))
 
-        buttons_frame = tk.Frame(self.game_screen)
+        buttons_frame = tk.Frame(self.arbitration_frame)
         buttons_frame.pack(pady=(0, 20))
 
         self.primary_button = tk.Button(
@@ -187,6 +233,13 @@ class SkateGameUI:
             command=self.handle_secondary_action
         )
         self.secondary_button.pack(side="left", padx=10)
+
+        self.history_button = tk.Button(
+        self.arbitration_frame,
+        text="History",
+        command=self.toggle_history_view
+        )
+        self.history_button.pack(pady=(0, 10))
 
     def refresh_game_screen(self):
         if self.controller.is_finished():
@@ -372,7 +425,8 @@ class SkateGameUI:
             self.refresh_game_screen()
             return
 
-        last_attacker = self.controller.game.turn_history[-1].attacker
+        last_attacker_name = self.controller.game.turn_history[-1].attacker
+        last_attacker = self.controller.players[last_attacker_name]
         next_attacker = self.controller.game.get_next_attacker(last_attacker)
 
         self.waiting_for_next_trick = True
@@ -396,6 +450,55 @@ class SkateGameUI:
     def clear_root(self):
         for widget in self.root.winfo_children():
             widget.destroy()
+
+    def toggle_history_view(self):
+        if self.current_view == "game":
+            self.show_history_view()
+        else:
+            self.show_arbitration_view()
+
+    def show_history_view(self):
+        self.arbitration_frame.pack_forget()
+        self.history_frame.pack(fill="both", expand=True)
+        self.current_view = "history"
+
+        self.refresh_history_view()
+
+    def show_arbitration_view(self):
+        self.history_frame.pack_forget()
+        self.arbitration_frame.pack(fill="both", expand=True)
+        self.current_view = "game"
+
+    def refresh_history_view(self):
+        for row in self.history_table.get_children():
+            self.history_table.delete(row)
+
+        for record in self.controller.game.turn_history:
+            defense_text = " | ".join(
+                f"{name}: {result}"
+                for name, result in record.defense_results.items()
+            )
+
+            letters_text = " | ".join(
+                f"{name} (+{letter})"
+                for name, letter in record.letters_received
+            )
+
+            eliminated_text = " | ".join(record.eliminated_players)
+
+            self.history_table.insert(
+                "",
+                "end",
+                values=(
+                    record.turn_number,
+                    record.attacker,
+                    record.trick,
+                    record.attack_result,
+                    defense_text,
+                    letters_text,
+                    eliminated_text
+                )
+            )
 
 def main():
     root = tk.Tk()
