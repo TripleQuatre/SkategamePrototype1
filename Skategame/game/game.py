@@ -173,9 +173,9 @@ class Game:
             attacker=finished_turn.attacker.name,
             trick=finished_turn.trick,
             attack_result=finished_turn.attack_result,
-            defense_results={
-                defender.name: result
-                for defender, result in finished_turn.defense_results.items()
+            defense_attempts={
+            defender.name: attempts[:]
+            for defender, attempts in finished_turn.defense_attempt_history.items()
             },
             letters_received=letters_received,
             eliminated_players=eliminated_players,

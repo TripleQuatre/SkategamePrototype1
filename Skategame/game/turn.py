@@ -56,6 +56,7 @@ class Turn:
             raise ValueError("no defense attempts left for this defender")
 
         self.defense_attempts_left[defender] -= 1
+        self.defense_attempt_history[defender].append("X")
 
     def set_defense_success(self, defender: Player):
         if self.turn_state != "defense_pending":
@@ -68,6 +69,7 @@ class Turn:
             raise ValueError("this defender already has a result")
         
         self.defense_results[defender] = "success"
+        self.defense_attempt_history[defender].append("V")
         self.update_turn_state()
 
     def set_defense_failure(self, defender: Player):

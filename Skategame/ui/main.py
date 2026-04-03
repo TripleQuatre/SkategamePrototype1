@@ -474,9 +474,11 @@ class SkateGameUI:
             self.history_table.delete(row)
 
         for record in self.controller.game.turn_history:
+            attack_text = "V" if record.attack_result == "success" else "X"
+
             defense_text = " | ".join(
-                f"{name}: {result}"
-                for name, result in record.defense_results.items()
+            f"{name}: {' '.join(attempts)}"
+            for name, attempts in record.defense_attempts.items()
             )
 
             letters_text = " | ".join(

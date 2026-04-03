@@ -5,7 +5,6 @@ class TurnRecord:
         attacker: str,
         trick: str,
         attack_result: str,
-        defense_results: dict[str, str],
         letters_received: list[str],
         eliminated_players: list[str],
         defense_attempts: dict[str, list[str]]
@@ -14,7 +13,6 @@ class TurnRecord:
         self.attacker = attacker
         self.trick = trick
         self.attack_result = attack_result
-        self.defense_results = defense_results
         self.letters_received = letters_received
         self.eliminated_players = eliminated_players
         self.defense_attempts = defense_attempts
@@ -24,7 +22,7 @@ class TurnRecord:
             f"Turn {self.turn_number} | "
             f"{self.attacker} -> '{self.trick}' | "
             f"attack: {self.attack_result} | "
-            f"defense: {self.defense_results} | "
+            f"defense: {self.defense_attempts} | "
             f"letters: {self.letters_received} | "
             f"eliminated: {self.eliminated_players}"
         )
